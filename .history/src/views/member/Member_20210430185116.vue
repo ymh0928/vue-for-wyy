@@ -1,0 +1,39 @@
+<template>
+  <div class="center wrap feature-wrap">
+    <div class="page-wrap">
+      <div class="m-proifo clearfix">
+        <div class="f-pr">
+          <img
+            :src="userDetail.profile ? userDetail.profile.avatarUrl : ''"
+            :alt="userDetail.profile ? userDetail.profile.nickname : ''"
+          />
+        </div>
+        <div class="f-r">
+          <div class="name">
+            <h2 class="clearfix">
+              <span class="tit ellipsis">{{
+                userDetail.profile.nickname
+              }}</span>
+              <p class="lv">
+                <span class="u-lv u-icn2">
+                  {{ userDetail.level }} <i class="lvright u-icn2"></i>
+                </span>
+              </p>
+            </h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import { mapState } from "vuex";
+export default {
+  name: "Member",
+  computed: {
+    ...mapState(["userDetail"]),
+  },
+};
+</script>
+<style lang="less" scoped>
+</style>

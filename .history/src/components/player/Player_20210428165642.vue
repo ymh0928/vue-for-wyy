@@ -1,0 +1,509 @@
+<template>
+  <div class="m-player">
+    <div class="lock">
+      <div class="left">
+        <i></i>
+      </div>
+    </div>
+    <div class="hand"></div>
+    <div class="container">
+      <div class="wrap">
+        <div class="btns">
+          <i class="prev" @click="onPrev"></i>
+          <i
+            class="toggle"
+            v-if="
+              !$store.state.playList.length || $store.state.currentIdx == -1
+            "
+          ></i>
+          <i
+            class="toggle playing"
+            v-else-if="
+              $store.state.playList.length &&
+              $store.state.currentIdx !== -1 &&
+              $store.state.playState
+            "
+            @click="$store.commit('pause')"
+          ></i>
+          <i
+            class="toggle"
+            v-else-if="
+              $store.state.playList.length &&
+              $store.state.currentIdx !== -1 &&
+              !$store.state.playState
+            "
+            @click="$store.commit('play')"
+          ></i>
+          <i class="next" @click="onNext"></i>
+        </div>
+        <div class="head">
+          <img
+            :src="
+              $store.state.playList.length && $store.state.currentIdx !== -1
+                ? $store.state.playList[$store.state.currentIdx].al.picUrl
+                : '//s4.music.126.net/style/web2/img/default/default_album.jpg'
+            "
+          />
+          <!-- 这个i的顺位在img前 -->
+          <i class="mask"></i>
+        </div>
+        <div class="play">
+          <div class="words clearfix">
+            <p class="ellipsis margin-bottom-none">
+              {{
+                $store.state.playList.length && $store.state.currentIdx !== -1
+                  ? $store.state.playList[$store.state.currentIdx].name
+                  : ""
+              }}
+            </p>
+            <ul class="songs clearfix margin-bottom-none">
+              <li>
+                {{
+                  $store.state.playList.length && $store.state.currentIdx !== -1
+                    ? $store.state.playList[$store.state.currentIdx].ar[0].name
+                    : ""
+                }}
+              </li>
+            </ul>
+          </div>
+          <div class="bar">
+            <div class="slider-wrap">
+              <a-slider
+                style="margin: 0; padding: 0"
+                :tooltipVisible="false"
+                :defaultValue="0"
+                :value="$store.state.currentPercent"
+                :disabled="$store.state.playList.length ? false : true"
+                @change="onPercentChange"
+                @afterChange="onPercentAfterChange"
+              />
+            </div>
+            <span class="time">
+              <em>{{
+                $store.state.playList.length
+                  ? this.$transformTime($store.state.currentTime) + " / "
+                  : ""
+              }}</em>
+              {{
+                $store.state.playList.length && $store.state.currentIdx !== -1
+                  ? this.$transformTime(
+                      $store.state.playList[$store.state.currentIdx].dt / 1000
+                    )
+                  : ""
+              }}
+            </span>
+          </div>
+        </div>
+        <div class="oper">
+          <i class="like" title="收藏"></i>
+          <i class="share" title="分享"></i>
+        </div>
+        <div class="ctrl">
+          <i class="volume" title="音量" @click="setShowVolume"></i>
+          <i
+            class="loop"
+            v-if="$store.state.playMode === 'loop'"
+            @click="playModeChangeRandom"
+          ></i>
+          <i
+            class="random"
+            v-if="$store.state.playMode === 'random'"
+            @click="playModeChangeSingleLoop"
+          ></i>
+          <i
+            class="singleLoop"
+            v-if="$store.state.playMode === 'singleLoop'"
+            @click="playModeChangeLoop"
+          ></i>
+          <p class="open">
+            <span></span>
+          </p>
+          <div class="control-vol" v-if="$store.state.showVolume">
+            <a-slider
+              style="margin: 0; padding: 0"
+              vertical
+              :defaultValue="$store.state.volume"
+              @change="onVolumeChange"
+            />
+          </div>
+          <div v-if="!$store.state.showVolume"></div>
+        </div>
+        <!-- <Panel /> -->
+      </div>
+    </div>
+    <audio
+      v-if="$store.state.playList.length && $store.state.ready"
+      ref="audioRef"
+      :src="$store.state.songUrl"
+      @canplay="onCanplay"
+      @timeupdate="onTimeupdate"
+      @ended="onEnded"
+    ></audio>
+    <audio v-else></audio>
+  </div>
+</template>
+<script>
+// import Panel from "../panel/Panel";
+export default {
+  name: "Player",
+  components: {
+    // Panel,
+  },
+  async updated() {
+    const {
+      playList,
+      currentIdx,
+      ready,
+      playState,
+      playMode,
+      currentSongId,
+    } = this.$store.state;
+    if (playList.length && currentIdx !== -1) {
+      if (ready) {
+        if (playMode === "random") {
+          const idArr = [];
+          playList.forEach((item) => {
+            idArr.push(item.id);
+          });
+          const currentindex = idArr.indexOf(currentSongId);
+          this.$store.commit("setCurrentIdx", currentindex);
+          const currentId = playList.map((item) => item.id)[currentindex];
+          const url = await this.$axios.get(`song/url?id=${currentId}`);
+          try {
+            this.$store.commit("setSongUrl", url.data.data[0].url);
+          } catch (error) {
+            this.$message.warning("对不起，这首歌没有播放链接");
+          }
+        } else {
+          const currentId = playList.map((item) => item.id)[currentIdx];
+          const url = await this.$axios.get(`song/url?id=${currentId}`);
+          try {
+            this.$store.commit("setSongUrl", url.data.data[0].url);
+          } catch (error) {
+            this.$message.warning("对不起，这首歌没有播放链接");
+          }
+        }
+        if (playState) {
+          this.$refs.audioRef.play();
+        } else {
+          this.$refs.audioRef.pause();
+        }
+      }
+    }
+  },
+  methods: {
+    onCanplay() {
+      this.$refs.audioRef.play();
+    },
+    onTimeupdate() {
+      const { playList, currentIdx } = this.$store.state;
+      const duration = playList[currentIdx].dt / 1000;
+      const currentPercent = (this.$refs.audioRef.currentTime / duration) * 100;
+      this.$store.commit("setCurrentTime", this.$refs.audioRef.currentTime);
+      this.$store.commit("setCurrentPercent", currentPercent);
+    },
+    onPercentChange(newValue) {
+      const { playList, currentIdx } = this.$store.state;
+      this.$refs.audioRef.pause();
+      const duration = playList[currentIdx].dt / 1000;
+      const newPercent = newValue;
+      const newCurrent = (duration * newValue) / 100;
+      this.$refs.audioRef.currentTime = newCurrent;
+      this.$store.commit("setCurrentTime", newCurrent);
+      this.$store.commit("setCurrentPercent", newPercent);
+    },
+    onPercentAfterChange() {
+      this.$refs.audioRef.play();
+    },
+    onVolumeChange(newValue) {
+      if (this.$refs.audioRef) {
+        this.$refs.audioRef.volume = newValue / 100;
+        this.$store.commit("setVolume", newValue);
+      }
+      this.$store.commit("setVolume", newValue);
+    },
+    setShowVolume() {
+      this.$store.commit("setShowVolume");
+    },
+    loop() {
+      this.$refs.audioRef.play();
+    },
+    async onPrevNext(index) {
+      const { playList, playState } = this.$store.state;
+      this.$store.commit("setCurrentIdx", index);
+      this.$store.commit("setCurrentSongId", playList[index].id);
+      this.$store.commit("setCurrentSong", playList[index]);
+      if (!playState) {
+        this.$store.commit("setPlayStateTrue");
+      }
+      const currentId = playList.map((item) => item.id)[index];
+      const url = await this.$axios.get(`song/url?id=${currentId}`);
+      try {
+        this.$store.commit("setSongUrl", url.data.data[0].url);
+      } catch (error) {
+        this.$message.warning("对不起，这首歌没有播放链接");
+      }
+    },
+    onPrev() {
+      const { playList, currentIdx, ready } = this.$store.state;
+      if (!ready) return;
+      if (playList.length === 1) {
+        this.loop();
+      } else {
+        if (currentIdx <= 0) {
+          this.onPrevNext(playList.length - 1);
+        } else {
+          this.onPrevNext(currentIdx - 1);
+        }
+      }
+    },
+    onNext() {
+      const { playList, currentIdx, ready } = this.$store.state;
+      if (!ready) return;
+      if (playList.length === 1) {
+        this.loop();
+      } else {
+        if (currentIdx >= playList.length - 1) {
+          this.onPrevNext(0);
+        } else {
+          this.onPrevNext(currentIdx + 1);
+        }
+      }
+    },
+    playModeChangeRandom() {
+      this.$store.commit("playModeChangeRandom");
+      this.$store.commit("setPlayListChangeRandom");
+    },
+    playModeChangeSingleLoop() {
+      this.$store.commit("playModeChangeSingleLoop");
+    },
+    playModeChangeLoop() {
+      this.$store.commit("playModeChangeLoop");
+    },
+    onEnded() {
+      if (this.$store.state.playMode === "singleLoop") {
+        this.loop();
+      } else {
+        this.onNext();
+      }
+    },
+  },
+};
+</script>
+
+
+
+
+
+
+
+
+
+
+<style lang="less" scoped>
+@import "../../assets/css/layout.less";
+@import "../../assets/css/varibles.less";
+@import "../../assets/css/mixins.less";
+
+.m-player {
+  position: fixed;
+  zoom: 1;
+  left: 0;
+  bottom: 0px;
+  width: 100%;
+  .hand {
+    width: 100%;
+    height: 15px;
+    cursor: pointer;
+    opacity: 0.3;
+  }
+  .lock {
+    position: relative;
+    z-index: 1;
+    .left {
+      position: absolute;
+      top: -5px;
+      right: 15px;
+      .icon("../../assets/images/playbar.png", 52px, 67px);
+      background-position: 0 -380px;
+      i {
+        margin: 6px 0 0 17px;
+        .icon("../../assets/images/playbar.png", 18px, 18px);
+        background-position: -80px -380px;
+        &:hover {
+          background-position: -80px -400px;
+        }
+        &.locked {
+          background-position: -100px -380px;
+          &:hover {
+            background-position: -100px -400px;
+          }
+        }
+      }
+    }
+  }
+  .container {
+    background-color: @play-bg-color;
+    .wrap {
+      position: relative;
+      display: flex;
+      padding: 8px 0;
+      .btns {
+        width: 137px;
+        padding-top: 6px;
+        i {
+          margin-right: 8px;
+          border-radius: 50%;
+          .icon("../../assets/images/playbar.png", 28px, 28px);
+          cursor: pointer;
+          &.prev {
+            background-position: 0 -130px;
+            &:hover {
+              background-position: -30px -130px;
+            }
+          }
+          &.toggle {
+            width: 36px;
+            height: 36px;
+            background-position: -40px -204px;
+            &.playing {
+              background-position: 0 -165px;
+            }
+          }
+          &.next {
+            background-position: -80px -130px;
+            &:hover {
+              background-position: -110px -130px;
+            }
+          }
+        }
+      }
+      .head {
+        position: relative;
+        margin: 6px 15px 0 0;
+        img {
+          width: 34px;
+          height: 34px;
+        }
+        .mask {
+          position: absolute;
+          top: 0;
+          left: 0;
+          .icon("../../assets/images/playbar.png", 34px, 34px);
+          background-position: 0 -80px;
+        }
+      }
+      .play {
+        width: 608px;
+        .words {
+          color: @white-color;
+          min-height: 18px;
+          text-shadow: 0 1px 0 @box-shadow-base;
+          &.hide {
+            visibility: hidden;
+          }
+          p {
+            float: left;
+            max-width: 300px;
+            margin-right: 10px;
+            cursor: pointer;
+          }
+          .songs {
+            float: left;
+            li {
+              float: left;
+            }
+          }
+        }
+        .bar {
+          color: @white-color;
+          .slider-wrap {
+            display: inline-block;
+            width: 490px;
+            margin-right: 10px;
+            vertical-align: bottom;
+            padding: 8px 0;
+          }
+        }
+      }
+      .oper {
+        width: 60px;
+        i {
+          margin: 11px 2px 0 0;
+          .icon("../../assets/images/playbar.png", 25px, 25px);
+          &.like {
+            background-position: -88px -163px;
+            &:hover {
+              background-position: -88px -189px;
+            }
+          }
+          &.share {
+            background-position: -114px -163px;
+            &:hover {
+              background-position: -114px -189px;
+            }
+          }
+        }
+      }
+      .ctrl {
+        position: relative;
+        width: 113px;
+        padding-left: 13px;
+        i {
+          margin: 11px 2px 0 0;
+          .icon("../../assets/images/playbar.png", 25px, 25px);
+          &.volume {
+            background-position: -2px -248px;
+            &:hover {
+              background-position: -31px -248px;
+            }
+          }
+          &.random {
+            background-position: -66px -248px;
+            &:hover {
+              background-position: -93px -248px;
+            }
+          }
+          &.loop {
+            background-position: -3px -344px;
+            &:hover {
+              background-position: -33px -344px;
+            }
+          }
+          &.singleLoop {
+            background-position: -66px -344px;
+            &:hover {
+              background-position: -93px -344px;
+            }
+          }
+        }
+        .open {
+          display: inline-block;
+          cursor: pointer;
+          span {
+            display: block;
+            text-align: center;
+            color: @text-color;
+            text-shadow: 0 1px 0 @box-shadow-base;
+            .icon("../../assets/images/playbar.png", 24px, 24px);
+            background-position: -42px -68px;
+            &:hover {
+              background-position: -42px -98px;
+            }
+          }
+        }
+        .control-vol {
+          position: absolute;
+          top: -128px;
+          left: 9px;
+          padding: 14px;
+          height: 120px;
+          background-color: @play-bg-color;
+          z-index: 1;
+          width: 32px;
+        }
+      }
+    }
+  }
+}
+</style>

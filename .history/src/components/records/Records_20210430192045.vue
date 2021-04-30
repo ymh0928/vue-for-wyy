@@ -1,0 +1,105 @@
+<template>
+  <div class="wy-sec">
+    <div class="u-title wy-sec-wrap clearfix">
+      <h3 class="wy-sec-tit"><span class="f-ff2">听歌排行</span></h3>
+      <span class="sub s-fc3">累计听歌</span>
+      <div class="more tab-type">
+        <span @click="changeSingRecordWeek">最近一周</span>
+        <a-divider type="vertical"></a-divider>
+        <span @click="changeSingRecordAll">所有时间</span>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  name: "Records",
+  data() {
+    const columns = [
+      {
+        title: "",
+        key: "playIcon",
+        scopedSlots: { customRender: "playIcon" },
+        width: "80px",
+      },
+      {
+        title: "标题",
+        key: "song",
+        dataIndex: "song",
+        scopedSlots: { customRender: "song" },
+      },
+      {
+        title: "时长",
+        key: "time",
+        dataIndex: "time",
+        width: "120px",
+      },
+      {
+        title: "歌手",
+        key: "singer",
+        dataIndex: "singer",
+        width: "150px",
+        scopedSlots: { customRender: "singer" },
+      },
+      {
+        title: "专辑",
+        key: "album",
+        dataIndex: "album",
+      },
+      {
+        title: "",
+        key: "icons",
+        scopedSlots: { customRender: "icons" },
+        width: "120px",
+      },
+    ];
+    return {
+      columns,
+      dataSource: [],
+    };
+  },
+  props: {
+    id: Number,
+  },
+  computed: {
+    listenChange() {
+      const { singRecord } = this;
+      return { singRecord };
+    },
+    listenChange2() {
+      const { userRecord } = this;
+      return { userRecord };
+    },
+    // time() {
+    //   return this.$timestampToTime(this.sheetDetail.createTime);
+    // },
+    ...mapState(["singRecord", "userRecord"]),
+  },
+  watch: {
+    listenChange() {
+      this.$store.dispatch("setUserRecord", this.id);
+    },
+    listenChange2() {
+      this.userRecord.forEach((item, idx) => {
+        this.dataSource.push({
+          key: idx,
+          playIcon: "",
+          song: item,
+          time: this.$transformTime(item.dt / 1000),
+          singer: item.ar[0],
+        });
+      });
+    },
+  },
+  methods: {
+    changeSingRecordWeek() {
+      this.$store.commit("changeSingRecordWeek");
+    },
+    changeSingRecordAll() {
+      this.$store.commit("changeSingRecordAll");
+    },
+  },
+};
+</script>
+<style lang="less" scoped>
+</style>
