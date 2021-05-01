@@ -153,13 +153,7 @@ export default {
         const { data: res } = await this.$axios.get(
           `cellphone/existence/check?phone=${phoneValue}`
         );
-        const captchaValue = this.form.getFieldValue("captcha");
-        const { data: result } = await this.$axios.get(
-          `captcha/verify?phone=${phoneValue}&captcha=${captchaValue}`
-        );
-        // if (result.code === 200) {
-        //   this.$message.success("注册成功");
-        // }
+
         if (res.exist === 1) {
           this.$message.error("该手机号已被注册！！！");
         }
@@ -172,9 +166,6 @@ export default {
       const { data: res } = await this.$axios.get(
         `captcha/sent?phone=${phoneValue}`
       );
-      if (res.code === 200) {
-        this.$message.success("请注意查收手机验证码");
-      }
       console.log(res);
     },
   },

@@ -81,7 +81,6 @@ import { mapState } from "vuex";
 import Player from "../../components/player/Player";
 import WySearch from "../../components/wysearch/WySearch";
 import RegLogModal from "../../components/reglogmodal/RegLogModal";
-import { codeJson } from "../../utils/base64";
 export default {
   name: "Home",
   components: {
@@ -92,13 +91,7 @@ export default {
   computed: {
     ...mapState(["searchPanel", "cat", "hasToken", "userDetail"]),
   },
-  created() {
-    const user = localStorage.getItem("wyRememberLogin");
-    if (user) {
-      const User = codeJson(JSON.parse(user), "decode");
-      this.$store.dispatch("userLogin", User);
-    }
-  },
+  created() {},
   methods: {
     onInput(e) {
       this.$store.dispatch("setSearchResult", e.target.value);

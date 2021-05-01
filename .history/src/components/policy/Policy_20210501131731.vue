@@ -4,6 +4,7 @@
     title="服务条款及数据使用政策"
     placement="right"
     :closable="false"
+    destroyOnClose
     :visible="drawerVisible"
     @close="onClose"
     width="350px"

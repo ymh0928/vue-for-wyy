@@ -79,7 +79,6 @@ export default {
       this.$store.commit("changeReg");
     },
     onSubmit() {
-      this.form.validateFields({ first: true });
       const values = this.form.getFieldsValue();
       this.$store.dispatch("userLogin", values);
     },

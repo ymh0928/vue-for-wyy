@@ -8,10 +8,9 @@
             'phone',
             {
               rules: [
-                { required: true, message: '请输入手机号', whitespace: true },
+                { required: true, message: '请输入手机号' },
                 { validator: handlePhone },
               ],
-              validateFirst: true,
             },
           ]"
           placeholder="请输入手机号"
@@ -24,12 +23,7 @@
         <a-input-password
           v-decorator="[
             'password',
-            {
-              rules: [
-                { required: true, message: '请输入密码', whitespace: true },
-              ],
-              validateFirst: true,
-            },
+            { rules: [{ required: true, message: '请输入密码' }] },
           ]"
           placeholder="请输入密码"
         >
@@ -79,7 +73,6 @@ export default {
       this.$store.commit("changeReg");
     },
     onSubmit() {
-      this.form.validateFields({ first: true });
       const values = this.form.getFieldsValue();
       this.$store.dispatch("userLogin", values);
     },

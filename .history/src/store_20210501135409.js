@@ -311,7 +311,8 @@ export default new Vuex.Store({
     },
     async userLogin(context, values) {
       const { phone, password, remember } = values;
-      if (phone !== undefined && password !== undefined) {
+      if (phone !== "" && password !== "") {
+        console.log("aaa");
         const { data: res } = await axios.get(
           `login/cellphone?phone=${phone}&password=${password}`
         );

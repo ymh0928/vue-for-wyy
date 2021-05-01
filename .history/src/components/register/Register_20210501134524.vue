@@ -154,12 +154,9 @@ export default {
           `cellphone/existence/check?phone=${phoneValue}`
         );
         const captchaValue = this.form.getFieldValue("captcha");
-        const { data: result } = await this.$axios.get(
+        const { data: res } = await this.$axios.get(
           `captcha/verify?phone=${phoneValue}&captcha=${captchaValue}`
         );
-        // if (result.code === 200) {
-        //   this.$message.success("注册成功");
-        // }
         if (res.exist === 1) {
           this.$message.error("该手机号已被注册！！！");
         }

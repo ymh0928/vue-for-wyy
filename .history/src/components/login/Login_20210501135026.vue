@@ -11,7 +11,6 @@
                 { required: true, message: '请输入手机号', whitespace: true },
                 { validator: handlePhone },
               ],
-              validateFirst: true,
             },
           ]"
           placeholder="请输入手机号"
@@ -28,7 +27,6 @@
               rules: [
                 { required: true, message: '请输入密码', whitespace: true },
               ],
-              validateFirst: true,
             },
           ]"
           placeholder="请输入密码"
@@ -79,7 +77,6 @@ export default {
       this.$store.commit("changeReg");
     },
     onSubmit() {
-      this.form.validateFields({ first: true });
       const values = this.form.getFieldsValue();
       this.$store.dispatch("userLogin", values);
     },

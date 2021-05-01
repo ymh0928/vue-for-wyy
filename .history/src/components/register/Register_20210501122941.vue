@@ -11,6 +11,7 @@
                 { required: true, message: '请输入昵称', whitespace: true },
               ],
               validateFirst: true,
+              validateTrigger: 'blur',
             },
           ]"
           placeholder="请输入昵称"
@@ -27,7 +28,6 @@
               rules: [
                 { required: true, message: '请输入密码', whitespace: true },
               ],
-              validateFirst: true,
             },
           ]"
           placeholder="请输入密码"
@@ -45,7 +45,6 @@
                 { required: true, message: '请输入手机号', whitespace: true },
                 { validator: handlePhone },
               ],
-              validateFirst: true,
             },
           ]"
           placeholder="请输入手机号"
@@ -68,7 +67,6 @@
                       whitespace: true,
                     },
                   ],
-                  validateFirst: true,
                 },
               ]"
               placeholder="请输入验证码"
@@ -79,9 +77,7 @@
         </a-col>
         <a-col :xl="8">
           <a-form-item>
-            <a-button type="primary" style="width: 50%" @click="sentCaptcha">
-              获取
-            </a-button>
+            <a-button type="primary" style="width: 50%"> 获取 </a-button>
           </a-form-item>
         </a-col>
       </a-row>
@@ -92,7 +88,6 @@
             {
               valuePropName: 'checked',
               rules: [{ validator: handleAgree }],
-              validateFirst: true,
             },
           ]"
         >
@@ -122,16 +117,14 @@ export default {
     Policy,
   },
   beforeCreate() {
-    this.form = this.$form.createForm(this, {
-      name: "nickname password phone captcha agree",
-    });
+    this.form = this.$form.createForm(this, { name: "form" });
   },
   methods: {
     handlePhone(rule, value, cb) {
       if (/^1[3|4|5|7|8][0-9]{9}$/.test(value)) {
         cb();
       }
-      cb("不是规范的手机格式或已被占用!");
+      cb("不是规范的手机格式!");
     },
     handleAgree(rule, checked, cb) {
       if (checked) {
@@ -146,36 +139,13 @@ export default {
       this.$store.commit("changeLog");
     },
     async onSubmit() {
-      const drawerRef = document.querySelector("#drawerRef");
-      if (drawerRef) {
-        this.form.validateFields({ first: true });
-        const phoneValue = this.form.getFieldValue("phone");
-        const { data: res } = await this.$axios.get(
-          `cellphone/existence/check?phone=${phoneValue}`
-        );
-        const captchaValue = this.form.getFieldValue("captcha");
-        const { data: result } = await this.$axios.get(
-          `captcha/verify?phone=${phoneValue}&captcha=${captchaValue}`
-        );
-        // if (result.code === 200) {
-        //   this.$message.success("注册成功");
-        // }
-        if (res.exist === 1) {
-          this.$message.error("该手机号已被注册！！！");
-        }
-      } else {
-        this.$message.warning("请阅读服务条款及数据使用政策！！！");
-      }
-    },
-    async sentCaptcha() {
       const phoneValue = this.form.getFieldValue("phone");
       const { data: res } = await this.$axios.get(
-        `captcha/sent?phone=${phoneValue}`
+        `cellphone/existence/check?phone=${phoneValue}`
       );
-      if (res.code === 200) {
-        this.$message.success("请注意查收手机验证码");
+      if (res.exist === 1) {
+        this.$message.warning("该手机号已被注册！！！");
       }
-      console.log(res);
     },
   },
 };

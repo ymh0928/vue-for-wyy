@@ -1,6 +1,6 @@
 <template>
   <a-drawer
-    id="drawerRef"
+    ref="drawerRef"
     title="服务条款及数据使用政策"
     placement="right"
     :closable="false"

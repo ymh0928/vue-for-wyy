@@ -1,6 +1,5 @@
 <template>
   <a-drawer
-    id="drawerRef"
     title="服务条款及数据使用政策"
     placement="right"
     :closable="false"
@@ -8,7 +7,7 @@
     @close="onClose"
     width="350px"
   >
-    <div style="padding: 10px">
+    <div ref="drawerRef" style="padding: 10px">
       <h3>前言</h3>
       <p>
         本站提醒您在注册前仔细阅读以下条款。倘若您对任何条款表示异议，
